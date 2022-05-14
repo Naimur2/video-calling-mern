@@ -442,11 +442,13 @@ ctrl.logout = (socket, data) => {
 };
 
 ctrl.notAccept = (socket, data) => {
-    console.warn("not accepted", data);
+    console.log("not accept", data);
+    // console.warn("not accepted", data);
     const { callerId, caller, recieverId, reciever, socketId } = data;
     const filtered = Array.from(activeSocket).find(
         (ac) => ac.user.phone === caller && ac.id === socketId
     );
+    console.log("filtered", filtered);
 
     if (filtered) {
         filtered.socket.send(

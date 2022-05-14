@@ -43,17 +43,30 @@ export default function ShowCall() {
     };
 
     React.useEffect(() => {
+        if (socketCtx.notAnswered) {
+            alert("notAnswered");
+
+            navigation.goBack();
+            socketCtx.updateState({
+                notAnswered: false,
+            });
+            socketCtx.setShowCallingModal(false);
+            socketCtx.setCallDetails(null);
+        }
+    }, [socketCtx.notAnswered]);
+
+    React.useEffect(() => {
         const timer = setTimeout(() => {
             if (!socketCtx.isAccepted) {
-                alert("No answer");
+                alert(JSON.stringify(socketCtx.callDetails));
                 // socketCtx.setShowCallingModal(false);
-                // socketCtx.sendMessage({
-                //     type: "NO_ANSWER",
-                //     data: socketCtx.callDetails,
-                // });
                 // socketCtx.setCallDetails(null);
+                socketCtx.sendMessage({
+                    type: "NO_ANSWER",
+                    data: socketCtx.callDetails,
+                });
             }
-        }, 30000);
+        }, 5000);
         return () => clearTimeout(timer);
     }, [socketCtx.isAccepted]);
 

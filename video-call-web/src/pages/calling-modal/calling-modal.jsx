@@ -37,17 +37,28 @@ export default function CallingModal() {
     React.useEffect(() => {
         const timer = setTimeout(() => {
             if (!socketCtx.isAccepted) {
-                alert("No answer");
-                // socketCtx.setShowCallingModal(false);
-                // socketCtx.sendMessage({
-                //     type: "NO_ANSWER",
-                //     data: socketCtx.callDetails,
-                // });
+                alert(JSON.stringify(socketCtx.callDetails));
+                socketCtx.sendMessage({
+                    type: "NO_ANSWER",
+                    data: socketCtx.callDetails,
+                });
                 // socketCtx.setCallDetails(null);
+                // socketCtx.setShowCallingModal(false);
             }
-        }, 30000);
+        }, 5000);
         return () => clearTimeout(timer);
     }, [socketCtx.isAccepted]);
+
+    React.useEffect(() => {
+        if (socketCtx.notAnswered) {
+            alert("notAnswered");
+            socketCtx.updateState({
+                notAnswered: false,
+            });
+            socketCtx.setShowCallingModal(false);
+            socketCtx.setCallDetails(null);
+        }
+    }, [socketCtx.notAnswered]);
 
     return (
         <Modal
