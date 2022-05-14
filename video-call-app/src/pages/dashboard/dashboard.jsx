@@ -91,7 +91,10 @@ export default function Dashboard() {
         if (socketCtx.localStream && socketCtx.remoteStream) {
             // when user pickup
             InCallManager.stopRingtone();
-            InCallManager.start();
+            InCallManager.start({
+                media: "video",
+            });
+            InCallManager.setForceSpeakerphoneOn(true);
             navigation.navigate("Call");
         }
     }, [socketCtx.localStream, socketCtx.remoteStream]);
@@ -100,6 +103,8 @@ export default function Dashboard() {
         if (socketCtx.isEndCall) {
             if (socketCtx.localStream) {
                 stopStream(socketCtx.localStream);
+                InCallManager.setForceSpeakerphoneOn(false);
+                InCallManager.stop();
                 socketCtx.setLocalStream(null);
             }
 
