@@ -19,7 +19,7 @@ const reducer = (state, action) => {
         case "LOGOUT":
             return {
                 ...state,
-                user: {},
+                user: null,
             };
 
         case "SET_ERROR":
@@ -58,8 +58,6 @@ export default function MainContexProvider({ children }) {
                         message: "Authentication failed",
                     },
                 });
-
-                
             } else {
                 const data = await response.json();
                 dispatch({

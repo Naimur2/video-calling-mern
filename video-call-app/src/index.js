@@ -28,18 +28,22 @@ export default function Route() {
     }, []);
 
     return (
-        <NavigationContainer>
+        <>
             {user ? (
-                <Stack.Navigator initialRouteName="Dashboard">
-                    <Stack.Screen name="Dashboard" component={Dashboard} />
-                    <Stack.Screen name="Call" component={CallScreen} />
-                    <Stack.Screen name="ShowCall" component={ShowCall} />
-                </Stack.Navigator>
+                <NavigationContainer>
+                    <Stack.Navigator initialRouteName="Dashboard">
+                        <Stack.Screen name="Dashboard" component={Dashboard} />
+                        <Stack.Screen name="Call" component={CallScreen} />
+                        <Stack.Screen name="ShowCall" component={ShowCall} />
+                    </Stack.Navigator>
+                </NavigationContainer>
             ) : (
-                <Stack.Navigator initialRouteName="Login">
-                    <Stack.Screen name="Login" component={Login} />
-                </Stack.Navigator>
+                <NavigationContainer>
+                    <Stack.Navigator initialRouteName="Login">
+                        <Stack.Screen name="Login" component={Login} />
+                    </Stack.Navigator>
+                </NavigationContainer>
             )}
-        </NavigationContainer>
+        </>
     );
 }

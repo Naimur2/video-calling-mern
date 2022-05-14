@@ -18,7 +18,7 @@ const reducer = (state, action) => {
         case "LOGOUT":
             return {
                 ...state,
-                user: {},
+                user: null,
             };
 
         case "SET_ERROR":

@@ -20,6 +20,7 @@ const defaultState = {
     localCall: null,
     notAvailable: false,
     notAnswered: false,
+    isAccepted: false,
 };
 
 const socketReducerer = (state, action) => {
@@ -116,6 +117,10 @@ const socketReducerer = (state, action) => {
             return {
                 ...state,
                 ...action.payload,
+            };
+        case "CLEAR_STATE":
+            return {
+                ...defaultState,
             };
         default:
             return state;
@@ -262,7 +267,7 @@ export default function SocketProvider({ children }) {
                 },
             });
 
-            alert("User is busy");
+            alert("User is not answered your call");
         };
 
         const onNotAvailable = (call) => {
@@ -401,6 +406,18 @@ export default function SocketProvider({ children }) {
                         // show modal
                         onNotAnswered(data.data);
                         break;
+                    case "HIDE_SHOW_CALL_MODAL":
+                        dispatch({
+                            type: "UPDATE_STATE",
+                            payload: {
+                                showCallingModal: false,
+                                callDetails: null,
+                            },
+                        });
+                        break;
+                    case "HIDE_CALL_MODAL":
+                        alert("hide modal");
+                        break;
                     default:
                         break;
                 }
@@ -477,6 +494,7 @@ export default function SocketProvider({ children }) {
             notAnswered: state.notAnswered,
             setNotAnswered: (notAnswered) =>
                 dispatch({ type: "SET_NOT_ANSWERED", notAnswered }),
+            clearState: () => dispatch({ type: "CLEAR_STATE" }),
         };
     }, [state, answerCall]);
 

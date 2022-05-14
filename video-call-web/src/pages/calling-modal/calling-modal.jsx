@@ -6,42 +6,48 @@ export default function CallingModal() {
     const socketCtx = React.useContext(SocketContext);
 
     const acceptCall = async () => {
-        const { caller, callerId, reciever, recieverId, callerPeerId } =
-            socketCtx.callDetails;
         const message = {
             type: "ACCEPT_CALL",
             data: {
-                caller,
-                callerId,
-                reciever,
-                recieverId,
-                callerPeerId,
+                ...socketCtx.callDetails,
                 recieverPeerId: socketCtx.peerId,
             },
         };
-
-        socketCtx.setCallDetails(socketCtx.callDetails);
+        socketCtx.updateState({
+            isAccepted: true,
+        });
+        // socketCtx.setCallDetails(socketCtx.callDetails);
         socketCtx.sendMessage(message);
         socketCtx.setShowCallingModal(false);
     };
 
     const rejectCall = () => {
-        const { caller, callerId, reciever, recieverId } =
-            socketCtx.callDetails;
-
         const message = {
             type: "REJECT_CALL",
-            data: {
-                caller,
-                callerId,
-                reciever,
-                recieverId,
-            },
+            data: socketCtx.callDetails,
         };
+        socketCtx.updateState({
+            isAccepted: false,
+        });
         socketCtx.sendMessage(message);
         socketCtx.setShowCallingModal(false);
         socketCtx.setCallDetails(null);
     };
+
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            if (!socketCtx.isAccepted) {
+                alert("No answer");
+                // socketCtx.setShowCallingModal(false);
+                // socketCtx.sendMessage({
+                //     type: "NO_ANSWER",
+                //     data: socketCtx.callDetails,
+                // });
+                // socketCtx.setCallDetails(null);
+            }
+        }, 30000);
+        return () => clearTimeout(timer);
+    }, [socketCtx.isAccepted]);
 
     return (
         <Modal

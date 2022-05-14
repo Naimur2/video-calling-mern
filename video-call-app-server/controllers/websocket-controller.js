@@ -30,11 +30,10 @@ ctrl.removeSocket = (socketObj) => {
     );
     console.log("isACaller", isACaller);
 
-    
     const isAReciever = busyNumbersArray.findIndex(
         (ac) => JSON.stringify(ac.recieverSocket) === JSON.stringify(socketObj)
     );
-    
+
     console.log("isAReciever", isAReciever);
 
     if (isACaller !== -1) {
@@ -53,7 +52,6 @@ ctrl.removeSocket = (socketObj) => {
         );
         busyNumbers.delete(busyNumberObj);
     }
-
 
     if (isAReciever !== -1) {
         console.log("isAReciever");
@@ -118,6 +116,11 @@ ctrl.sendMessage = (socket, data) => {
 };
 
 ctrl.callToUser = (socket, data) => {
+    const sock = Array.from(activeSocket).find(
+        (ac) => JSON.stringify(ac.socket) === JSON.stringify(socket)
+    );
+    const socketId = sock.id;
+
     const { callerId, caller, recieverId, reciever, callerPeerId } = data;
 
     const filteredActive = Array.from(busyNumbers).find(
@@ -138,6 +141,7 @@ ctrl.callToUser = (socket, data) => {
                         recieverId,
                         reciever,
                         callerPeerId,
+                        socketId,
                     },
                 })
             );
@@ -256,64 +260,138 @@ ctrl.endClientCall = (socket, data) => {
 
 ctrl.rejectCall = (socket, data) => {
     console.warn("reject call", data);
-    const { callerId, caller, recieverId, reciever } = data;
-    const filtered = Array.from(activeSocket).find(
-        (ac) => ac.user.phone === caller
+    // detect is the user in a call
+    const { callerId, caller, recieverId, reciever, socketId } = data;
+
+    const filtered = Array.from(busyNumbers).find(
+        (d) => d.reciever === reciever || d.caller === reciever
     );
 
     if (filtered) {
-        filtered.socket.send(
+        socket.send(
             JSON.stringify({
-                type: "REJECT_CALL",
-                data: {
-                    callerId,
-                    caller,
-                    recieverId,
-                    reciever,
-                },
+                type: "HIDE_SHOW_CALL_MODAL",
+                data,
             })
         );
     } else {
-        socket.send(
-            JSON.stringify({
-                type: "NOT_AVAILABLE",
-                data: {
-                    callerId,
-                    caller,
-                    recieverId,
-                    reciever,
-                },
-            })
+        const dataSocket = Array.from(activeSocket).find(
+            (ac) => ac.user.phone === caller && ac.id === socketId
         );
+        if (dataSocket) {
+            dataSocket.socket.send(
+                JSON.stringify({
+                    type: "REJECT_CALL",
+                    data: {
+                        callerId,
+                        caller,
+                        recieverId,
+                        reciever,
+                    },
+                })
+            );
+        } else {
+            socket.send(
+                JSON.stringify({
+                    type: "NOT_AVAILABLE",
+                    data: {
+                        callerId,
+                        caller,
+                        recieverId,
+                        reciever,
+                    },
+                })
+            );
+        }
     }
 };
 
-ctrl.acceptCall = async (socket, data) => {
-    console.log("accept call", data);
-
-    const filtered = Array.from(activeSocket).find(
-        (ac) => ac.user.phone === data.caller
+ctrl.hideShowCall = (data) => {
+    const socketId = data.socketId;
+    const activeCallers = Array.from(busyNumbers).filter(
+        (ac) => ac.callerSocket.id !== socketId
     );
-    // send recievers data to caller
-    if (filtered) {
-        busyNumbers.add({
-            ...data,
-            recieverSocket: socket,
-            callerSocket: filtered.socket,
-        });
-        await filtered.socket.send(
+
+    activeCallers.forEach((item) => {
+        item.callerSocket.send(
             JSON.stringify({
-                type: "ANSWER_RECEIVER_CALL",
+                type: "HIDE_SHOW_CALL_MODAL",
+                data,
+            })
+        );
+    });
+};
+
+ctrl.hideCallModal = (socket, data) => {
+    const activeFiltered = Array.from(activeSocket).filter(
+        (ac) => JSON.stringify(ac.socket) !== JSON.stringify(socket)
+    );
+
+    activeFiltered.forEach((item) => {
+        item.socket.send(
+            JSON.stringify({
+                type: "HIDE_CALL_MODAL",
+                data,
+            })
+        );
+    });
+};
+
+ctrl.acceptCall = async (socket, data) => {
+    const { reciever } = data;
+
+    const filtered = Array.from(busyNumbers).filter(
+        (d) => d.reciever === reciever || d.caller === reciever
+    );
+
+    if (filtered.length > 0) {
+        socket.send(
+            JSON.stringify({
+                type: "HIDE_SHOW_CALL_MODAL",
                 data,
             })
         );
     } else {
-        await socket.send(
-            JSON.stringify({
-                type: "CALL_ENDED",
-                data,
-            })
+        console.log("accept call", data);
+        const filteredUser = Array.from(activeSocket).find(
+            (ac) => ac.user.phone === data.caller && ac.id === data.socketId
         );
+        // send hide modal message to all the other rcievers
+
+        // const filteredOtherUser = Array.from(activeSocket).filter(
+        //     (ac) => ac.id !== data.socketId
+        // );
+        // console.log("filteredOtherUser", filteredOtherUser);
+        // filteredOtherUser.forEach((item) => {
+        //     item.socket.send(
+        //         JSON.stringify({
+        //             type: "HIDE_SHOW_CALL_MODAL",
+        //             data,
+        //         })
+        //     );
+        // });
+
+        // send recievers data to caller
+        if (filteredUser) {
+            busyNumbers.add({
+                ...data,
+                recieverSocket: socket,
+                callerSocket: filteredUser.socket,
+            });
+            await filteredUser.socket.send(
+                JSON.stringify({
+                    type: "ANSWER_RECEIVER_CALL",
+                    data,
+                })
+            );
+        } else {
+            await socket.send(
+                JSON.stringify({
+                    type: "CALL_ENDED",
+                    data,
+                })
+            );
+        }
     }
 };
 
@@ -342,30 +420,32 @@ ctrl.answerCall = async (socket, data) => {
     }
 };
 
-// ctrl.logout = (socket, data) => {
-//     const filtered = Array.from(activeSocket).find(
-//         (ac) => ac.user.userId === data.userId
-//     );
+ctrl.logout = (socket, data) => {
+    console.log("logout", data);
+    console.log(activeSocket);
+    // const filtered = Array.from(activeSocket).find(
+    //     (ac) => ac.user.userId === data.userId
+    // );
 
-//     if (filtered) {
-//         activeSocket.delete(filtered);
-//         const userSocket = JSON.stringify(filtered.socket);
-//         console.log("ok");
+    // if (filtered) {
+    //     activeSocket.delete(filtered);
+    //     const userSocket = JSON.stringify(filtered.socket);
+    //     console.log("ok");
 
-//         const filteredSocket = Array.from(sockets).find(
-//             (ac) => JSON.stringify(ac) === userSocket
-//         );
-//         if (filteredSocket) {
-//             sockets.delete(filteredSocket);
-//         }
-//     }
-// };
+    //     const filteredSocket = Array.from(sockets).find(
+    //         (ac) => JSON.stringify(ac) === userSocket
+    //     );
+    //     if (filteredSocket) {
+    //         sockets.delete(filteredSocket);
+    //     }
+    // }
+};
 
 ctrl.notAccept = (socket, data) => {
     console.warn("not accepted", data);
-    const { callerId, caller, recieverId, reciever } = data;
+    const { callerId, caller, recieverId, reciever, socketId } = data;
     const filtered = Array.from(activeSocket).find(
-        (ac) => ac.user.phone === caller
+        (ac) => ac.user.phone === caller && ac.id === socketId
     );
 
     if (filtered) {

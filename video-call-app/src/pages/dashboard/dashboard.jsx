@@ -1,7 +1,17 @@
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
-import { Button, StyleSheet, TextInput, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import {
+    Button,
+    StyleSheet,
+    TextInput,
+    View,
+    Pressable,
+    Text,
+} from "react-native";
 import InCallManager from "react-native-incall-manager";
+import useAuth from "../../hooks/use-auth";
 import useLocalStream from "../../hooks/use-localStream";
 import MainContext from "../../store/main-context";
 import SocketContext from "./../../store/socket-context";
@@ -9,6 +19,7 @@ import SocketContext from "./../../store/socket-context";
 export default function Dashboard() {
     const mainCtx = React.useContext(MainContext);
     const [getStream, stopStream] = useLocalStream();
+    const user = useAuth();
 
     const [friendsId, setFriendsId] = React.useState("");
 
@@ -116,6 +127,31 @@ export default function Dashboard() {
         }
     }, [socketCtx.isEndCall]);
 
+    const logoutUser = async () => {
+        // if (socketCtx.callDetails) {
+        //     const msz = {
+        //         type: "END_CALL",
+        //         data: { ...socketCtx.callDetails, user },
+        //     };
+
+        //     socketCtx.sendMessage(msz);
+        //     socketCtx.endCall();
+        // }
+        const message = {
+            type: "LOGOUT",
+            data: {
+                userId: mainCtx.user.phone,
+            },
+        };
+        socketCtx.sendMessage(message);
+        socketCtx.socket.close();
+        socketCtx.peer.disconnect();
+        socketCtx.peer.destroy();
+        socketCtx.clearState();
+        mainCtx.logout();
+        AsyncStorage.removeItem("token");
+    };
+
     return (
         <View style={styles.container}>
             <TextInput
@@ -124,7 +160,12 @@ export default function Dashboard() {
                 value={friendsId}
                 onChangeText={(value) => setFriendsId(value)}
             />
-            <Button title="Connect" onPress={callToFriend} />
+            <View style={{ marginBottom: 10 }}>
+                <Button title="Call" onPress={callToFriend} />
+            </View>
+            <View style={{ marginBottom: 10 }}>
+                <Button title="Logout" onPress={logoutUser} />
+            </View>
         </View>
     );
 }
@@ -133,7 +174,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#ccc",
-        alignItems: "center",
+
         justifyContent: "center",
         paddingHorizontal: 20,
         position: "relative",
@@ -143,7 +184,6 @@ const styles = StyleSheet.create({
         margin: 12,
         borderWidth: 1,
         padding: 10,
-        width: "100%",
     },
     selfView: {
         width: 150,

@@ -34,6 +34,9 @@ const SocketContext = React.createContext({
     setRemoteStreamInfo:()=>{},
     updateState:()=>{},
     notAnswered:false,
+    clearState:()=>{},
+    isAccepted:false,
+    setIsAccepted:()=>{},
 });
 
 export default SocketContext;
