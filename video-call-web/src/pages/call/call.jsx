@@ -1,22 +1,14 @@
 import React from "react";
-import { Button, Container, Form } from "react-bootstrap";
+import { Button, Col, Modal, Row } from "react-bootstrap";
 import useAuth from "../../hooks/use-auth";
-import useLocalStream from "../../hooks/use-localStream";
-import MainContext from "../../store/main-context";
 import SocketContext from "../../store/socket-context";
 
 export default function Call() {
-    const mainCtx = React.useContext(MainContext);
-    const socketCtx = React.useContext(SocketContext);
-    const [message, setMessage] = React.useState("");
-    const [phone, setPhone] = React.useState("");
-    const [getStream, stopStream] = useLocalStream();
     const user = useAuth();
 
     const local = React.useRef(null);
     const remote = React.useRef(null);
-
-    const [friendsId, setFriendsId] = React.useState("");
+    const socketCtx = React.useContext(SocketContext);
 
     React.useEffect(() => {
         if (socketCtx.localStream) {
@@ -26,23 +18,6 @@ export default function Call() {
             remote.current.srcObject = socketCtx.remoteStream;
         }
     }, [socketCtx]);
-
-    const callUser = (e) => {
-        e.preventDefault();
-        if (!friendsId || friendsId.length < 11) {
-            alert("Please enter your friend's friendsId number");
-            return;
-        }
-        const callerId = mainCtx.user._id;
-        const caller = mainCtx.user.phone;
-        const recieverId = "gdfgfdgfdgfdgfd";
-        const reciever = friendsId;
-        const callerPeerId = socketCtx.peerId;
-        const data = { callerId, caller, recieverId, reciever, callerPeerId };
-        socketCtx.setCallDetails(data);
-
-        socketCtx.callToUser(data);
-    };
 
     const endCall = () => {
         if (socketCtx.callDetails) {
@@ -56,89 +31,59 @@ export default function Call() {
         }
     };
 
-    const sendMessage = (e) => {
-        const from = { _id: mainCtx.user._id, phone: mainCtx.user.phone };
-        e.preventDefault();
-        if (message.length < 1) {
-            alert("Please enter your message");
-            return;
+    const handleClose = () => {
+        if (socketCtx.localStream && socketCtx.remoteStream) {
+            endCall();
         }
-        if (phone.length < 1) {
-            alert("Please enter your phone number");
-            return;
-        }
-        socketCtx.sendMessage({
-            type: "MESSAGE",
-            data: { from, to: { phone }, message },
+        socketCtx.updateState({
+            callStatus: null,
         });
     };
 
     return (
-        <Container className="mt-4">
-            <h1>Call a Friend</h1>
-            {socketCtx.peerId && <p>{socketCtx.peerId}</p>}
-            <Form>
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label>Enter phone Number</Form.Label>
-                    <Form.Control
-                        value={friendsId}
-                        onChange={(e) => setFriendsId(e.target.value)}
-                        type="telephone"
-                        placeholder="Enter phone number"
-                    />
-                </Form.Group>
-                <Button onClick={callUser} variant="primary" type="submit">
-                    Call
-                </Button>
-                <Button onClick={endCall} variant="secondary" type="button">
-                    End Call
-                </Button>
-                {/* <Button onClick={closeCall} variant="primary" type="button">
-                    Stop Call
-                </Button> */}
-            </Form>
-            <Form className="my-4">
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label>Phone</Form.Label>
-                    <Form.Control
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        type="telephone"
-                        placeholder="Enter phone"
-                        required
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="message">
-                    <Form.Label>Message</Form.Label>
-                    <Form.Control
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        type="text"
-                        placeholder="Enter message"
-                        required
-                    />
-                </Form.Group>
-                <Button onClick={sendMessage} variant="primary" type="submit">
-                    Send
-                </Button>
-            </Form>
-
-            {socketCtx.localStream && (
-                <video
-                    style={{ width: "100vw", height: "50vh" }}
-                    autoPlay
-                    playsInline
-                    ref={local}
-                ></video>
-            )}
-            {socketCtx.remoteStream && (
-                <video
-                    style={{ width: "100vw", height: "50vh" }}
-                    autoPlay
-                    playsInline
-                    ref={remote}
-                ></video>
-            )}
-        </Container>
+        <Modal
+            show={socketCtx.callStatus}
+            onHide={handleClose}
+            backdrop="static"
+            fullscreen={true}
+            keyboard={false}
+        >
+            <Modal.Header closeButton>
+                <Modal.Title>{socketCtx.callStatus.message}</Modal.Title>
+            </Modal.Header>
+            <Row style={{ padding: "2rem" }}>
+                <div style={{ width: "48%" }}>
+                    {socketCtx.localStream && (
+                        <video
+                            style={{ width: "100%", height: "400px" }}
+                            autoPlay
+                            playsInline
+                            ref={local}
+                        ></video>
+                    )}
+                </div>
+                <div style={{ width: "48%" }}>
+                    {socketCtx.remoteStream && (
+                        <video
+                            style={{
+                                width: "100%",
+                                height: "400px",
+                                transform: "rotate(90deg)",
+                            }}
+                            autoPlay
+                            playsInline
+                            ref={remote}
+                        ></video>
+                    )}
+                </div>
+            </Row>
+            <Modal.Footer>
+                {socketCtx.remoteStream && socketCtx.localStream && (
+                    <Button onClick={endCall} variant="secondary" type="button">
+                        End Call
+                    </Button>
+                )}
+            </Modal.Footer>
+        </Modal>
     );
 }

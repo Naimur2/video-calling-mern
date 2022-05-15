@@ -15,10 +15,10 @@ export default function CallingModal() {
         };
         socketCtx.updateState({
             isAccepted: true,
+            showCallingModal: false,
         });
         // socketCtx.setCallDetails(socketCtx.callDetails);
         socketCtx.sendMessage(message);
-        socketCtx.setShowCallingModal(false);
     };
 
     const rejectCall = () => {
@@ -28,37 +28,32 @@ export default function CallingModal() {
         };
         socketCtx.updateState({
             isAccepted: false,
+            showCallingModal: false,
+            callDetails: null,
         });
         socketCtx.sendMessage(message);
-        socketCtx.setShowCallingModal(false);
-        socketCtx.setCallDetails(null);
     };
 
     React.useEffect(() => {
         const timer = setTimeout(() => {
             if (!socketCtx.isAccepted) {
-                alert(JSON.stringify(socketCtx.callDetails));
                 socketCtx.sendMessage({
                     type: "NO_ANSWER",
                     data: socketCtx.callDetails,
                 });
-                // socketCtx.setCallDetails(null);
-                // socketCtx.setShowCallingModal(false);
+                socketCtx.updateState({
+                    isAccepted: false,
+                    showCallingModal: false,
+                    callDetails: null,
+                    callStatus: {
+                        type: "missed call",
+                        message: "You missed a call",
+                    },
+                });
             }
         }, 5000);
         return () => clearTimeout(timer);
     }, [socketCtx.isAccepted]);
-
-    React.useEffect(() => {
-        if (socketCtx.notAnswered) {
-            alert("notAnswered");
-            socketCtx.updateState({
-                notAnswered: false,
-            });
-            socketCtx.setShowCallingModal(false);
-            socketCtx.setCallDetails(null);
-        }
-    }, [socketCtx.notAnswered]);
 
     return (
         <Modal

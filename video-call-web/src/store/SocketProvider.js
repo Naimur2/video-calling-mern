@@ -21,6 +21,7 @@ const defaultState = {
     notAvailable: false,
     notAnswered: false,
     isAccepted: false,
+    callStatus: null,
 };
 
 const socketReducerer = (state, action) => {
@@ -122,7 +123,7 @@ const socketReducerer = (state, action) => {
             return {
                 ...defaultState,
             };
-        
+
         default:
             return state;
     }
@@ -214,10 +215,14 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "call_rejected",
+                        message: "Your call has been rejected",
+                    },
                 },
             });
 
-            alert("Call Rejected");
+            
         };
 
         const onBusy = (call) => {
@@ -240,10 +245,14 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "user_busy",
+                        message: "Your user in another call ",
+                    },
                 },
             });
 
-            alert("User is busy");
+            // alert("User is busy");
         };
         const onNotAnswered = (call) => {
             if (locCall.current) {
@@ -254,21 +263,15 @@ export default function SocketProvider({ children }) {
             dispatch({
                 type: "UPDATE_STATE",
                 payload: {
-                    isEndCall: false,
-                    localCall: null,
-                    localStream: null,
-                    remoteStream: null,
-                    isBusy: false,
-                    isRejected: false,
-                    notFound: false,
-                    notAvailable: false,
-                    showCallingModal: false,
-                    callDetails: null,
                     notAnswered: true,
+                    callDetails: null,
+                    showCallingModal: false,
+                    callStatus: {
+                        type: "no_answered",
+                        message: "Your Friend didn't answer the call",
+                    },
                 },
             });
-
-            alert("User is not answered your call");
         };
 
         const onNotAvailable = (call) => {
@@ -291,10 +294,12 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "not available",
+                        message: "The user is not online",
+                    },
                 },
             });
-
-            alert("User is not available");
         };
 
         const onCallRequest = async (data) => {
@@ -331,6 +336,10 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "end_call",
+                        message: "The call was ended",
+                    },
                 },
             });
         };
@@ -430,6 +439,12 @@ export default function SocketProvider({ children }) {
         };
 
         const callToUser = async (data) => {
+            dispatch({
+                type: "UPDATE_STATE",
+                payload: {
+                    callStatus: { type: "calling", message: "Calling", data },
+                },
+            });
             const message = {
                 type: "CALL_TO_USER",
                 data,
@@ -493,6 +508,7 @@ export default function SocketProvider({ children }) {
             setNotAnswered: (notAnswered) =>
                 dispatch({ type: "SET_NOT_ANSWERED", notAnswered }),
             clearState: () => dispatch({ type: "CLEAR_STATE" }),
+            callStatus: state.callStatus,
         };
     }, [state, answerCall]);
 

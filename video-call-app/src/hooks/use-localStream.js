@@ -20,10 +20,10 @@ export default function useLocalStream() {
             }
 
             const constraints = {
-                audio: false,
+                audio: true,
                 video: {
-                    width: 300,
-                    height: 200,
+                    width: 1280,
+                    height: 720,
                     frameRate: 30,
                     facingMode: isFront ? "user" : "environment",
                     deviceId: videoSourceId,

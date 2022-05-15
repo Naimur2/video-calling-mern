@@ -21,6 +21,7 @@ const defaultState = {
     notAvailable: false,
     notAnswered: false,
     isAccepted: false,
+    callStatus: null,
 };
 
 const socketReducerer = (state, action) => {
@@ -213,6 +214,10 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "call_rejected",
+                        message: "Your call has been rejected",
+                    },
                 },
             });
 
@@ -239,6 +244,10 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "user_busy",
+                        message: "Your user in another call ",
+                    },
                 },
             });
 
@@ -253,17 +262,13 @@ export default function SocketProvider({ children }) {
             dispatch({
                 type: "UPDATE_STATE",
                 payload: {
-                    isEndCall: false,
-                    localCall: null,
-                    localStream: null,
-                    remoteStream: null,
-                    isBusy: false,
-                    isRejected: false,
-                    notFound: false,
-                    notAvailable: false,
-                    showCallingModal: false,
-                    callDetails: null,
                     notAnswered: true,
+                    callDetails: null,
+                    showCallingModal: false,
+                    callStatus: {
+                        type: "no_answered",
+                        message: "Your Friend didn't answer the call",
+                    },
                 },
             });
 
@@ -290,6 +295,10 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "not available",
+                        message: "The user is not online",
+                    },
                 },
             });
 
@@ -330,6 +339,10 @@ export default function SocketProvider({ children }) {
                     showCallingModal: false,
                     callDetails: null,
                     notAnswered: false,
+                    callStatus: {
+                        type: "end_call",
+                        message: "The call was ended",
+                    },
                 },
             });
         };
@@ -432,6 +445,12 @@ export default function SocketProvider({ children }) {
         };
 
         const callToUser = async (data) => {
+            dispatch({
+                type: "UPDATE_STATE",
+                payload: {
+                    callStatus: { type: "calling", message: "Calling", data },
+                },
+            });
             const message = {
                 type: "CALL_TO_USER",
                 data,
@@ -495,6 +514,7 @@ export default function SocketProvider({ children }) {
             setNotAnswered: (notAnswered) =>
                 dispatch({ type: "SET_NOT_ANSWERED", notAnswered }),
             clearState: () => dispatch({ type: "CLEAR_STATE" }),
+            callStatus: state.callStatus,
         };
     }, [state, answerCall]);
 

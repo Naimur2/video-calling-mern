@@ -1,15 +1,8 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import {
-    Button,
-    StyleSheet,
-    TextInput,
-    View,
-    Pressable,
-    Text,
-} from "react-native";
+import { Button, StyleSheet, TextInput, View } from "react-native";
 import InCallManager from "react-native-incall-manager";
 import useAuth from "../../hooks/use-auth";
 import useLocalStream from "../../hooks/use-localStream";
@@ -75,14 +68,14 @@ export default function Dashboard() {
         };
     }, [peer]);
 
-    const callToFriend = () => {
+    const callToUser = () => {
         if (!friendsId || friendsId.length < 11) {
             alert("Please enter your friend's id");
             return;
         }
 
-        const callerId = mainCtx.user._id;
-        const caller = mainCtx.user.phone;
+        const callerId = user._id;
+        const caller = user.phone;
         const recieverId = "gdfgfdgfdgfdgfd";
         const reciever = friendsId;
         const callerPeerId = socketCtx.peerId;
@@ -106,6 +99,12 @@ export default function Dashboard() {
                 media: "video",
             });
             InCallManager.setForceSpeakerphoneOn(true);
+            socketCtx.updateState({
+                callStatus: {
+                    type: "started video",
+                    message: "You are in a call",
+                },
+            });
             navigation.navigate("Call");
         }
     }, [socketCtx.localStream, socketCtx.remoteStream]);
@@ -140,7 +139,7 @@ export default function Dashboard() {
         const message = {
             type: "LOGOUT",
             data: {
-                userId: mainCtx.user.phone,
+                userId: user.phone,
             },
         };
         socketCtx.sendMessage(message);
@@ -152,6 +151,18 @@ export default function Dashboard() {
         AsyncStorage.removeItem("token");
     };
 
+    // React.useEffect(() => {
+    //     console.log(socketCtx.notAnswered);
+    //     if (socketCtx.notAnswered) {
+    //         alert("notAnswered");
+    //         socketCtx.updateState({
+    //             notAnswered: false,
+    //         });
+    //         socketCtx.setShowCallingModal(false);
+    //         socketCtx.setCallDetails(null);
+    //     }
+    // }, [socketCtx.notAnswered]);
+
     return (
         <View style={styles.container}>
             <TextInput
@@ -161,7 +172,7 @@ export default function Dashboard() {
                 onChangeText={(value) => setFriendsId(value)}
             />
             <View style={{ marginBottom: 10 }}>
-                <Button title="Call" onPress={callToFriend} />
+                <Button title="Call" onPress={callToUser} />
             </View>
             <View style={{ marginBottom: 10 }}>
                 <Button title="Logout" onPress={logoutUser} />

@@ -1,13 +1,35 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+
 import React from "react";
+import { Container, Form, Button } from "react-bootstrap";
+import useAuth from "../../hooks/use-auth";
 import useLocalStream from "../../hooks/use-localStream";
-import Call from "../call/call";
 import SocketContext from "./../../store/socket-context";
 
 export default function Dashboard() {
     const socketCtx = React.useContext(SocketContext);
     const [getStream, stopStream] = useLocalStream();
     const peer = socketCtx.peer;
+
+    const [friendsId, setFriendsId] = React.useState("");
+    const user = useAuth();
+
+    const callToUser = (e) => {
+        e.preventDefault();
+        if (!friendsId || friendsId.length < 11) {
+            alert("Please enter your friend's friendsId number");
+            return;
+        }
+        const callerId = user._id;
+        const caller = user.phone;
+        const recieverId = "gdfgfdgfdgfdgfd";
+        const reciever = friendsId;
+        const callerPeerId = socketCtx.peerId;
+        const data = { callerId, caller, recieverId, reciever, callerPeerId };
+        socketCtx.setCallDetails(data);
+
+        socketCtx.callToUser(data);
+    };
 
     React.useEffect(() => {
         const peerConnection = () => {
@@ -73,9 +95,44 @@ export default function Dashboard() {
         }
     }, [socketCtx.isEndCall]);
 
+    React.useEffect(() => {
+        if (socketCtx.localStream && socketCtx.remoteStream) {
+            socketCtx.updateState({
+                callStatus: {
+                    type: "started video",
+                    message: "You are in a call",
+                },
+            });
+        }
+    }, [socketCtx.localStream, socketCtx.remoteStream]);
+
+    // React.useEffect(() => {
+    //     if (socketCtx.notAnswered) {
+    //         socketCtx.updateState({
+    //             notAnswered: false,
+    //         });
+    //         socketCtx.setShowCallingModal(false);
+    //         socketCtx.setCallDetails(null);
+    //     }
+    // }, [socketCtx.notAnswered]);
+
     return (
-        <>
-            <Call />
-        </>
+        <Container className="mt-4">
+            <h1>Call a Friend</h1>
+            <Form>
+                <Form.Group className="mb-3" controlId="formBasicEmail">
+                    <Form.Label>Enter phone Number</Form.Label>
+                    <Form.Control
+                        value={friendsId}
+                        onChange={(e) => setFriendsId(e.target.value)}
+                        type="telephone"
+                        placeholder="Enter phone number"
+                    />
+                </Form.Group>
+                <Button onClick={callToUser} variant="primary" type="submit">
+                    Call
+                </Button>
+            </Form>
+        </Container>
     );
 }

@@ -37,6 +37,7 @@ const SocketContext = React.createContext({
     clearState:()=>{},
     isAccepted:false,
     setIsAccepted:()=>{},
+    callStatus:null,
 });
 
 export default SocketContext;

@@ -22,9 +22,9 @@ export default function ShowCall() {
         // socketCtx.setCallDetails(socketCtx.callDetails);
         socketCtx.updateState({
             isAccepted: true,
+            showCallingModal: false,
         });
         socketCtx.sendMessage(message);
-        socketCtx.setShowCallingModal(false);
     };
 
     const rejectCall = () => {
@@ -32,43 +32,46 @@ export default function ShowCall() {
             type: "REJECT_CALL",
             data: socketCtx.callDetails,
         };
+
         socketCtx.updateState({
             isAccepted: false,
+            showCallingModal: false,
+            callDetails: null,
         });
         socketCtx.sendMessage(message);
-        socketCtx.setShowCallingModal(false);
-        socketCtx.setCallDetails(null);
         InCallManager.stopRingtone();
         navigation.goBack();
     };
 
     React.useEffect(() => {
-        if (socketCtx.notAnswered) {
-            alert("notAnswered");
-
-            navigation.goBack();
-            socketCtx.updateState({
-                notAnswered: false,
-            });
-            socketCtx.setShowCallingModal(false);
-            socketCtx.setCallDetails(null);
-        }
-    }, [socketCtx.notAnswered]);
-
-    React.useEffect(() => {
         const timer = setTimeout(() => {
             if (!socketCtx.isAccepted) {
-                alert(JSON.stringify(socketCtx.callDetails));
-                // socketCtx.setShowCallingModal(false);
-                // socketCtx.setCallDetails(null);
                 socketCtx.sendMessage({
                     type: "NO_ANSWER",
                     data: socketCtx.callDetails,
                 });
+
+                socketCtx.updateState({
+                    isAccepted: false,
+                    showCallingModal: false,
+                    callDetails: null,
+                    callStatus: {
+                        type: "missed call",
+                        message: "You missed a call",
+                    },
+                });
+                alert("You Missed a call");
+                InCallManager.stopRingtone();
             }
         }, 5000);
         return () => clearTimeout(timer);
     }, [socketCtx.isAccepted]);
+
+    React.useEffect(() => {
+        if (!socketCtx.showCallingModal) {
+            navigation.goBack();
+        }
+    }, [socketCtx.showCallingModal]);
 
     return (
         <View style={container}>

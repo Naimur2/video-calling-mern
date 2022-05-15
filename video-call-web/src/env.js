@@ -1,21 +1,21 @@
 module.exports = {
-    DATA_URL: 'http://192.168.0.100:4000',
-    API_URI: "192.168.0.100",
+    DATA_URL: 'http://192.168.0.105:4000',
+    API_URI: "192.168.0.105",
     WEB_SOCKET: "ws://localhost:8080",
     PEER_CONFIG: {
-        host: "192.168.0.100",
+        host: "192.168.0.105",
         port: 4000,
         path: "/peer",
         secure: false,
         config: {
             iceServers: [
                 {
-                    url: "turn:192.168.0.100:7000",
+                    url: "turn:192.168.0.105:7000",
                     username: "naimur",
                     credential: "naimur",
                     credentialType: "password",
                 },
-                { url: "stun:192.168.0.100:7000" },
+                { url: "stun:192.168.0.105:7000" },
             ],
         },
     },

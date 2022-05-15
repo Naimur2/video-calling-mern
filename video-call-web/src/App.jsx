@@ -10,6 +10,7 @@ import PrivateRoute from "./pages/private-route";
 import Register from "./pages/register/register";
 import MainContext from "./store/main-context";
 import SocketContext from "./store/socket-context";
+import Call from "./pages/call/call";
 
 export default function App() {
     const socketCtx = React.useContext(SocketContext);
@@ -23,6 +24,7 @@ export default function App() {
 
     return (
         <>
+            {socketCtx.callStatus && <Call />}
             {socketCtx.callDetails && socketCtx.showCallingModal && (
                 <CallingModal />
             )}
