@@ -18,7 +18,7 @@ export default function ShowCall() {
                 recieverPeerId: socketCtx.peerId,
             },
         };
-
+        InCallManager.stopRingtone();
         // socketCtx.setCallDetails(socketCtx.callDetails);
         socketCtx.updateState({
             isAccepted: true,

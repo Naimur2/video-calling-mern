@@ -92,9 +92,11 @@ export default function Dashboard() {
     }, [socketCtx]);
 
     React.useEffect(() => {
+        if (socketCtx.localStream) console.error("getting localStream");
+        if (socketCtx.remoteStream) console.error("getting remote stream");
         if (socketCtx.localStream && socketCtx.remoteStream) {
             // when user pickup
-            InCallManager.stopRingtone();
+
             InCallManager.start({
                 media: "video",
             });

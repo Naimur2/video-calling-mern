@@ -9,7 +9,6 @@ import SocketContext from "./../../store/socket-context";
 
 export default function CallScreen() {
     const socketCtx = React.useContext(SocketContext);
-    const [getStream, stopStream] = useLocalStream();
     const navigation = useNavigation();
     const user = useAuth();
 
@@ -19,6 +18,16 @@ export default function CallScreen() {
     const remoteStreamUrl = socketCtx.remoteStream
         ? socketCtx.remoteStream.toURL()
         : null;
+
+    React.useEffect(() => {
+        if (!socketCtx.localStream || !socketCtx.remoteStream) {
+            navigation.goBack();
+        } else {
+            console.log("Both local and remote streams are ready");
+            console.log("localStreamUrl: ", socketCtx.localStream);
+            console.log("remoteStreamUrl: ", socketCtx.remoteStream);
+        }
+    }, [socketCtx.localStream, socketCtx.remoteStream]);
 
     const endCall = () => {
         if (socketCtx.callDetails) {
